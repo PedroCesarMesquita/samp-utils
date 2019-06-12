@@ -53,9 +53,9 @@ enum {
 }
 
 new dialogs[][][] = {
-    { {DIALOG_STYLE_LIST }, "VEHICLES", "Search by model id\nSearch by model name" },
-    { {DIALOG_STYLE_INPUT}, "SEARCH BY ID", "Enter the vehicle model id (400-611):" },
-    { {DIALOG_STYLE_INPUT}, "SEARCH BY NAME", "Enter the vehicle model name:" }
+    { {DIALOG_STYLE_LIST }, "Vehicle Spawner", "Pick random\nSearch by model id\nSearch by model name" },
+    { {DIALOG_STYLE_INPUT}, "Vehicle Spawner - Search by id", "Enter the vehicle model id (400-611):" },
+    { {DIALOG_STYLE_INPUT}, "Vehicle Spawner - Search by name", "Enter the vehicle model name:" }
 };
 
 stock isValidModelId(modelid) return modelid >= 400 && modelid <= 611;
@@ -77,7 +77,7 @@ stock giveVehicle(playerid, modelid) {
 }
 
 stock searchByVehicleModelName(inputtext[]) {
-    for(new i = strlen(inputtext); i > 0; i--) {
+    for(new i = strlen(inputtext); i > 1; i--) {
         for(new j = 0; j <= 211; j++) {
             if(!strcmp(inputtext, vehicleModels[j][0], true, i))
                 return j + 400;
@@ -86,22 +86,12 @@ stock searchByVehicleModelName(inputtext[]) {
     return -1;
 }
 
-public OnPlayerCommandText(playerid, cmdtext[]) {
-    if(!strcmp(cmdtext, "/VehicleSpawner", true)) {
-        showDialog(playerid, DIALOG_MAIN);
-        return 1;
-    }
-    return 0;
-}
-
 public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[]) {
     switch(dialogid) {
         case DIALOG_MAIN:
             if(response) {
-                switch(listitem) {
-                    case 0: showDialog(playerid, DIALOG_SEARCH_BY_ID);
-                    case 1: showDialog(playerid, DIALOG_SEARCH_BY_NAME);
-                }
+                if(listitem == 0) giveVehicle(playerid, 400 + random(211));
+                else showDialog(playerid, listitem);
             }
 
         case DIALOG_SEARCH_BY_ID:
@@ -112,4 +102,12 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[]) {
             if(response) giveVehicle(playerid, searchByVehicleModelName(inputtext));
             else showDialog(playerid, DIALOG_MAIN);
     }
+}
+
+public OnPlayerCommandText(playerid, cmdtext[]) {
+    if(!strcmp(cmdtext, "/VehicleSpawner", true)) {
+        showDialog(playerid, DIALOG_MAIN);
+        return 1;
+    }
+    return 0;
 }
