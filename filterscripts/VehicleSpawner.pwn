@@ -21,6 +21,22 @@
 public OnFilterScriptInit() printf("VehicleSpawner filterscript init.");
 public OnFilterScriptExit() printf("VehicleSpawner filterscript exit.");
 
+#define DIALOG_KEY 1000
+
+enum {
+    DIALOG_MAIN,
+    DIALOG_SEARCH_BY_ID,
+    DIALOG_SEARCH_BY_NAME
+}
+
+new dialogs[][][] = {
+    { {DIALOG_STYLE_LIST }, "Vehicle Spawner", "Pick random\nSearch by model id\nSearch by model name" },
+    { {DIALOG_STYLE_INPUT}, "Vehicle Spawner - Search by id", "Enter the vehicle model id (400-611):" },
+    { {DIALOG_STYLE_INPUT}, "Vehicle Spawner - Search by name", "Enter the vehicle model name:" }
+};
+
+stock showDialog(playerid, dialogid) return ShowPlayerDialog(playerid, dialogid + DIALOG_KEY, dialogs[dialogid][0][0], dialogs[dialogid][1], dialogs[dialogid][2], "Confirm", "Cancel");
+
 new vehicleModels[][][] = {
 	{"Landstalker","Off Road"},{"Bravura","Saloons"},{"Buffalo","Sport Vehicles"},{"Linerunner","Industrial"},{"Perennial","Station Wagons"},{"Sentinel","Saloons"},{"Dumper","Unique Vehicles"},{"Firetruck","Public Service"},{"Trashmaster","Industrial"},{"Stretch","Unique Vehicles"},
 	{"Manana","Saloons"},{"Infernus","Sport Vehicles"},{"Voodoo","Lowriders"},{"Pony","Industrial"},{"Mule","Industrial"},{"Cheetah","Sport Vehicles"},{"Ambulance","Public Service"},{"Leviathan","Helicopters"},{"Moonbeam","Station Wagons"},{"Esperanto","Saloons"},
@@ -46,23 +62,7 @@ new vehicleModels[][][] = {
 	{"Farm Trailer","Trailers"},{"Utility Trailer","Trailers"}
 };
 
-enum {
-    DIALOG_MAIN,
-    DIALOG_SEARCH_BY_ID,
-    DIALOG_SEARCH_BY_NAME
-}
-
-new dialogs[][][] = {
-    { {DIALOG_STYLE_LIST }, "Vehicle Spawner", "Pick random\nSearch by model id\nSearch by model name" },
-    { {DIALOG_STYLE_INPUT}, "Vehicle Spawner - Search by id", "Enter the vehicle model id (400-611):" },
-    { {DIALOG_STYLE_INPUT}, "Vehicle Spawner - Search by name", "Enter the vehicle model name:" }
-};
-
 stock isValidModelId(modelid) return modelid >= 400 && modelid <= 611;
-
-stock showDialog(playerid, dialogid) {
-    return ShowPlayerDialog(playerid, dialogid, dialogs[dialogid][0][0], dialogs[dialogid][1], dialogs[dialogid][2], "Confirm", "Cancel");
-}
 
 stock giveVehicle(playerid, modelid) {
     if(!isValidModelId(modelid)) return SendClientMessage(playerid, 0xFF0000FF, "Model not found");
@@ -76,10 +76,10 @@ stock giveVehicle(playerid, modelid) {
     return SendClientMessage(playerid, 0x00FF00FF, msg);
 }
 
-stock searchByVehicleModelName(inputtext[]) {
-    for(new i = strlen(inputtext); i > 1; i--) {
+stock searchByVehicleModelName(name[]) {
+    for(new i = strlen(name); i > 1; i--) {
         for(new j = 0; j <= 211; j++) {
-            if(!strcmp(inputtext, vehicleModels[j][0], true, i))
+            if(!strcmp(name, vehicleModels[j][0], true, i))
                 return j + 400;
         }
     }
@@ -87,7 +87,7 @@ stock searchByVehicleModelName(inputtext[]) {
 }
 
 public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[]) {
-    switch(dialogid) {
+    switch(dialogid - DIALOG_KEY) {
         case DIALOG_MAIN:
             if(response) {
                 if(listitem == 0) giveVehicle(playerid, 400 + random(211));
