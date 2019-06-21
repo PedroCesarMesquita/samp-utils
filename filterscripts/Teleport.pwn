@@ -26,13 +26,19 @@ public OnFilterScriptExit() printf("Teleport filterscript exit.");
 enum {
     DIALOG_MAIN,
     DIALOG_PLAYER_ID,
-    DIALOG_PLAYER_NAME
+    DIALOG_PLAYER_NAME,
+    DIALOG_POS_X,
+    DIALOG_POS_Y,
+    DIALOG_POS_Z,
 }
 
 new dialogs[][][] = {
-    { {DIALOG_STYLE_LIST }, "Teleport", "Teleport to player (id)\nTeleport to player (name)" },
+    { {DIALOG_STYLE_LIST }, "Teleport", "Teleport to player (id)\nTeleport to player (name)\nTeleport to pos (XYZ)" },
     { {DIALOG_STYLE_INPUT}, "Teleport to player (id)", "Enter the target player id" },
-    { {DIALOG_STYLE_INPUT}, "Teleport to player (name)", "Enter the target player name" }
+    { {DIALOG_STYLE_INPUT}, "Teleport to player (name)", "Enter the target player name" },
+    { {DIALOG_STYLE_INPUT}, "Teleport to pos (X)", "Enter the X position" },
+    { {DIALOG_STYLE_INPUT}, "Teleport to pos (Y)", "Enter the Y position" },
+    { {DIALOG_STYLE_INPUT}, "Teleport to pos (Z)", "Enter the Z position" }
 };
 
 stock showDialog(playerid, dialogid) return ShowPlayerDialog(playerid, dialogid + DIALOG_KEY, dialogs[dialogid][0][0], dialogs[dialogid][1], dialogs[dialogid][2], "Confirm", "Cancel");
@@ -50,7 +56,9 @@ stock teleportToPos(playerid, Float:x, Float:y, Float:z) {
 }
 
 stock teleportToPlayer(playerid, targetid) {
-    if(playerid == targetid || !IsPlayerConnected(playerid) || !IsPlayerConnected(targetid)) return 0;
+    if(!IsPlayerConnected(targetid)) return SendClientMessage(playerid, 0xFF0000FF, "Player not connected");
+    if(playerid == targetid) return SendClientMessage(playerid, 0xFF0000FF, "Can not teleport to yourself");
+
     new vehicleid = GetPlayerVehicleID(playerid), seatid = GetPlayerVehicleSeat(playerid), Float:x, Float:y, Float:z;
     GetPlayerPos(targetid, x, y, z);
     SetPlayerPos(playerid, x, y, z);
@@ -81,19 +89,20 @@ stock searchPlayerByName(name[]) {
 }
 
 public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[]) {
+    if(!response) return;
     switch(dialogid - DIALOG_KEY) {
-        case DIALOG_MAIN:
-            if(response) showDialog(playerid, listitem + 1);
-
-        case DIALOG_PLAYER_ID:
-            if(response) {
-                teleportToPlayer(playerid, strval(inputtext));
-            } else showDialog(playerid, DIALOG_MAIN);
-
-        case DIALOG_PLAYER_NAME:
-            if(response) {
-                teleportToPlayer(playerid, searchPlayerByName(inputtext));
-            } else showDialog(playerid, DIALOG_MAIN);
+        case DIALOG_MAIN: showDialog(playerid, listitem + 1);
+        case DIALOG_PLAYER_ID: teleportToPlayer(playerid, strval(inputtext));
+        case DIALOG_PLAYER_NAME: teleportToPlayer(playerid, searchPlayerByName(inputtext));
+        case DIALOG_POS_X: {
+            SetPVarFloat(playerid, "teleport1100x", strval(inputtext));
+            showDialog(playerid, DIALOG_POS_Y);
+        }
+        case DIALOG_POS_Y: {
+            SetPVarFloat(playerid, "teleport1100y", strval(inputtext));
+            showDialog(playerid, DIALOG_POS_Z);
+        }
+        case DIALOG_POS_Z: teleportToPos(playerid, GetPVarFloat(playerid, "teleport1100x"), GetPVarFloat(playerid, "teleport1100y"), strval(inputtext));
     }
 }
 
